@@ -6,6 +6,7 @@
 #include <gba_input.h>
 #include "flash.h"
 #include <string.h>
+#include "menu.h"
 
 const int MAGIC_LEN = 32;
 const char MAGIC_CODE_STD[MAGIC_LEN] = "THIS IS A TEST VER";
@@ -38,8 +39,29 @@ struct LastTimeRun{
     }
 };
 
-
 int askMBOffset(int lastOffset){
+
+    findGames();
+    Menu gameMenu("====Games=====");
+    for(int i=0;i<gameCnt;i++){
+        gameMenu.addOption(std::to_string(gameEntries[i].MB_offset) +std::string("MB  ") +std::string(gameEntries[i].name));
+    }
+    int option = gameMenu.getDecision();
+    int offset = gameEntries[option].MB_offset;    
+    
+    LastTimeRun newLastRun(offset);
+    *(LastTimeRun*)globle_buffer = newLastRun;//新的Meta
+
+    unlockBlock(META_BLOCK_IDX);
+    eraseBlock(META_BLOCK_IDX);
+    flashIntelBuffered(META_BLOCK_IDX,0,1);//烧写Meta
+
+    loadFlashSaveToBuffer(offset);//加载先前的存档
+    gotoChipOffset(offset,true,false);//开始游戏
+    return offset;
+}
+
+int askMBOffset_OLD(int lastOffset){
 
     int offset = 0;
     while(1){
@@ -72,6 +94,7 @@ int askMBOffset(int lastOffset){
         }
 		VBlankIntrWait();
     }
+    
     LastTimeRun newLastRun(offset);
     *(LastTimeRun*)globle_buffer = newLastRun;//新的Meta
 

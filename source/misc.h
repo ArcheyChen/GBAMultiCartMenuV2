@@ -6,7 +6,22 @@
 #define BUFFER_SIZE (0x10000)
 extern u8 globle_buffer[BUFFER_SIZE];//64KB
 extern u8 sramBackup[3];
+extern int gameCnt;
 void consoleClear();
 void pressToContinue(bool show = false);
 void gotoChipOffset(int MBoffset,bool bootGame,bool isAutoBoot=false);
 void backupSramLite();
+void findGames();
+
+#define GAME_NAME_LEN 18
+/*
+  0A0h    12    Game Title       (uppercase ascii, max 12 characters)
+  0ACh    4     Game Code        (uppercase ascii, 4 characters)
+  0B0h    2     Maker Code       (uppercase ascii, 2 characters)
+*/
+struct GameEntry{
+    char name[GAME_NAME_LEN + 1];
+    int MB_offset;
+};
+
+extern GameEntry gameEntries[32];

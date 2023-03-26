@@ -5,16 +5,8 @@
 EWRAM_BSS u8 globle_buffer[BUFFER_SIZE];//64KB
 EWRAM_BSS u8 sramBackup[3];
 
-#define GAME_NAME_LEN 18
-/*
-  0A0h    12    Game Title       (uppercase ascii, max 12 characters)
-  0ACh    4     Game Code        (uppercase ascii, 4 characters)
-  0B0h    2     Maker Code       (uppercase ascii, 2 characters)
-*/
-struct GameEntry{
-    char name[GAME_NAME_LEN + 1];
-    u8 MB_offset;
-};
+
+
 EWRAM_BSS GameEntry gameEntries[32];//最多64个游戏
 EWRAM_BSS int gameCnt=0;
 
@@ -76,7 +68,6 @@ IWRAM_CODE void findGames(){
     gameCnt = 0;
     unsigned int i;
     u16 MB_Offset;
-    backupSramLite();
     for(MB_Offset = 16 ;MB_Offset < 256; MB_Offset += 8){\
         gotoChipOffset(MB_Offset,0);
         if(isGame()){
