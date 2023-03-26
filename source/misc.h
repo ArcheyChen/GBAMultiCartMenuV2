@@ -5,7 +5,8 @@
 //64KB 等于SRAM的大小
 #define BUFFER_SIZE (0x10000)
 extern u8 globle_buffer[BUFFER_SIZE];//64KB
+extern u8 sramBackup[3];
 void consoleClear();
 void pressToContinue(bool show = false);
-void gotoChipOffset(int MBoffset,bool bootGame);
-void backupSram();
+void gotoChipOffset(int MBoffset,bool bootGame,bool isAutoBoot=false);
+void backupSramLite();

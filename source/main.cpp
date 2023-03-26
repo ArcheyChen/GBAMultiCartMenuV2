@@ -23,16 +23,18 @@ IWRAM_CODE int main(void) {
 	irqInit();
 	irqEnable(IRQ_VBLANK);
 	consoleDemoInit();
-	backupSram();
+	backupSramLite();
 	int offset;
-	if(!pressedKeyOnBoot(KEY_A | KEY_B)){
-		if(!autoStartGame()){
-			offset = askMBOffset();
-		}
+	if(pressedKeyOnBoot(KEY_A | KEY_B)){
+		int lastOffset = trySaveGame();
+		offset = askMBOffset(lastOffset);
 	}
-	offset = askMBOffset();
 
-	printf("Manully boot Offset set = %d MB",offset);
+	if(!autoStartGame()){//试图自动开始游戏
+		offset = askMBOffset(-1);
+	}
+
+	// printf("Manully boot Offset set = %d MB",offset);
 
 	while (1) {
 		VBlankIntrWait();

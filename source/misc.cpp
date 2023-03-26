@@ -18,21 +18,21 @@ struct GameEntry{
 EWRAM_BSS GameEntry gameEntries[32];//最多64个游戏
 EWRAM_BSS int gameCnt=0;
 
-void backupSram(){
+void backupSramLite(){
     vu8* sram = (vu8*)SRAM;
     sramBackup[0] = sram[2];
     sramBackup[1] = sram[3];
     sramBackup[2] = sram[4];
     return;
 }
-inline void restoreSram(){
+inline void restoreSramLite(){
     vu8* sram = (vu8*)SRAM;
 	sram[2] = sramBackup[0];
 	sram[3] = sramBackup[1];
 	sram[4] = sramBackup[2];
     return;
 }
-IWRAM_CODE void gotoChipOffset(int MBoffset,bool bootGame){
+IWRAM_CODE void gotoChipOffset(int MBoffset,bool bootGame,bool isAutoBoot){
     u32 chipAddr = (MBoffset/32 * 0x10000000) + (0x4000C0 + (MBoffset & 31) * 0x20202);
 	union{
 		u32 addr;
@@ -50,7 +50,15 @@ IWRAM_CODE void gotoChipOffset(int MBoffset,bool bootGame){
 	int timeout = 0x1000;
 	while(timeout && readFlash(0xBD) == data)timeout--;
     if(bootGame){
-        restoreSram();
+        // restoreSram();
+        if(isAutoBoot){
+            restoreSramLite();
+        }else{
+            vu8* sram = (vu8*)SRAM;
+            for(int i=0;i<64 * 1024;i++){
+                sram[i] = globle_buffer[i];
+            }  
+        } 
         __asm("SWI 0");
     }
     return;
@@ -68,7 +76,7 @@ IWRAM_CODE void findGames(){
     gameCnt = 0;
     unsigned int i;
     u16 MB_Offset;
-    backupSram();
+    backupSramLite();
     for(MB_Offset = 16 ;MB_Offset < 256; MB_Offset += 8){\
         gotoChipOffset(MB_Offset,0);
         if(isGame()){
@@ -83,7 +91,7 @@ IWRAM_CODE void findGames(){
     }
     
     gotoChipOffset(0,0);//返回menu
-    restoreSram();
+    restoreSramLite();
     return;
 }
 
