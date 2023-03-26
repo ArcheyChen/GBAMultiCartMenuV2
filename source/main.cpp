@@ -10,6 +10,7 @@
 #include "misc.h"
 #include "sramtest.h"
 #include "manage.h"
+#include "menu.h"
 //---------------------------------------------------------------------------------
 // Program entry point
 //---------------------------------------------------------------------------------
@@ -24,6 +25,23 @@ IWRAM_CODE int main(void) {
 	irqEnable(IRQ_VBLANK);
 	consoleDemoInit();
 	backupSramLite();
+	//////////////////////
+
+	while(1){
+		Menu menu("Menu Test");
+		std::string str="Test ";
+		for(int i=0;i<50;i++){
+			menu.addOption(str+std::to_string(i));
+		}
+		int option = menu.getDecision();
+		consoleClear();
+		printf("Option is %d\n",option);
+		pressToContinue(true);
+	}
+
+
+
+	////////////////////
 	int offset;
 	if(pressedKeyOnBoot(KEY_A | KEY_B)){
 		int lastOffset = trySaveGame();
