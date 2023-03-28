@@ -65,6 +65,7 @@ IWRAM_CODE char isGame(){
 	return checksum == 0x4B1B;
 }
 IWRAM_CODE void findGames(){
+    printf("Finding Games,Please Wait...\n");
     gameCnt = 0;
     unsigned int i;
     u16 MB_Offset;
@@ -80,9 +81,7 @@ IWRAM_CODE void findGames(){
             gameCnt++;
         }
     }
-    
     gotoChipOffset(0,0);//返回menu
-    restoreSramLite();
     return;
 }
 

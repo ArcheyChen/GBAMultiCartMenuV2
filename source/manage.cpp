@@ -53,14 +53,14 @@ int askMBOffset(int lastOffset){
     LastTimeRun* lastRunBuffer = (LastTimeRun*)globle_buffer;
     *lastRunBuffer = newLastRun;//新的Meta
 
-    printf("Buffer:\n M1:%s\nM2:%s\n auto boot:%d\n",lastRunBuffer->MAGIC_CODE1,lastRunBuffer->MAGIC_CODE2,lastRunBuffer->auto_start);
-    pressToContinue(true);
+    // printf("Buffer:\n M1:%s\nM2:%s\n auto boot:%d\n",lastRunBuffer->MAGIC_CODE1,lastRunBuffer->MAGIC_CODE2,lastRunBuffer->auto_start);
+    // pressToContinue(true);
     unlockBlock(META_BLOCK_IDX);
     eraseBlock(META_BLOCK_IDX);
     flashIntelBuffered(META_BLOCK_IDX,0,1);//烧写Meta
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
-    printf("last Run:\n M1:%s\nM2:%s\n auto boot:%d\n",last_run.MAGIC_CODE1,last_run.MAGIC_CODE2,last_run.auto_start);
-    pressToContinue(true);
+    // printf("last Run:\n M1:%s\nM2:%s\n auto boot:%d\n",last_run.MAGIC_CODE1,last_run.MAGIC_CODE2,last_run.auto_start);
+    // pressToContinue(true);
     loadFlashSaveToBuffer(offset);//加载先前的存档
     gotoChipOffset(offset,true,false);//开始游戏
     return offset;
@@ -117,8 +117,6 @@ int askMBOffset_OLD(int lastOffset){
 bool autoStartGame(){
     gotoChipOffset(0,false,false);
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
-    printf("last Run:\n M1:%s\nM2:%s\n auto boot:%d\n",last_run.MAGIC_CODE1,last_run.MAGIC_CODE2,last_run.auto_start);
-    pressToContinue(true);
     if(last_run.isValid() && last_run.auto_start){
         gotoChipOffset(last_run.MBOffset,true,true);
         return true;//should never return
