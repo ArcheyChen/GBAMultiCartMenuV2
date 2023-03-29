@@ -21,4 +21,4 @@ volatile void writeFlash(u32 addr, u16 data);
 vu8 readFlashFlip(u32 addr);
 int unlockBlock(int block);
 int eraseBlock(int block);
-int flashIntelBuffered(int block,int sector,int sector_num);
+int flashIntelBuffered(int block,int sector,int sector_num,bool cal=false);

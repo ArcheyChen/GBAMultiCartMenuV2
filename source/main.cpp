@@ -31,7 +31,7 @@ IWRAM_CODE int main(void) {
 
 	////////////////////
 	int offset;
-	if(pressedKeyOnBoot(KEY_A | KEY_B)){
+	if(pressedKeyOnBoot(KEY_L | KEY_R)){
 		int lastOffset = trySaveGame();
 		offset = askMBOffset(lastOffset);
 	}

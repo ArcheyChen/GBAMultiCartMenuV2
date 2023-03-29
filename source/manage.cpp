@@ -15,6 +15,7 @@ void loadFlashSaveToBuffer(int GameMBOffset);
 void saveSramSaveToBuffer();
 struct LastTimeRun{
     char MAGIC_CODE1[MAGIC_LEN];
+    char gameName[GAME_NAME_LEN + 1];
     int MBOffset;
     bool auto_start;
     char MAGIC_CODE2[MAGIC_LEN];
@@ -24,6 +25,7 @@ struct LastTimeRun{
         for(int i=0;i<MAGIC_LEN;i++){
             this->MAGIC_CODE1[i] = that.MAGIC_CODE1[i];
             this->MAGIC_CODE2[i] = that.MAGIC_CODE2[i];
+            this->gameName[i] = that.gameName[i];
         }
     }
     bool isValid(){
@@ -42,7 +44,7 @@ struct LastTimeRun{
 int askMBOffset(int lastOffset){
 
     findGames();
-    Menu gameMenu("====Games=====");
+    Menu gameMenu("========Games=======");
     for(int i=0;i<gameCnt;i++){
         gameMenu.addOption(std::to_string(gameEntries[i].MB_offset) +std::string("MB  ") +std::string(gameEntries[i].name));
     }
@@ -50,17 +52,15 @@ int askMBOffset(int lastOffset){
     int offset = gameEntries[option].MB_offset;    
 
     LastTimeRun newLastRun(offset);
+    strncpy(newLastRun.gameName, gameEntries[option].name,GAME_NAME_LEN);
+    newLastRun.gameName[GAME_NAME_LEN]='\0';
     LastTimeRun* lastRunBuffer = (LastTimeRun*)globle_buffer;
     *lastRunBuffer = newLastRun;//新的Meta
 
-    // printf("Buffer:\n M1:%s\nM2:%s\n auto boot:%d\n",lastRunBuffer->MAGIC_CODE1,lastRunBuffer->MAGIC_CODE2,lastRunBuffer->auto_start);
-    // pressToContinue(true);
     unlockBlock(META_BLOCK_IDX);
     eraseBlock(META_BLOCK_IDX);
     flashIntelBuffered(META_BLOCK_IDX,0,1);//烧写Meta
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
-    // printf("last Run:\n M1:%s\nM2:%s\n auto boot:%d\n",last_run.MAGIC_CODE1,last_run.MAGIC_CODE2,last_run.auto_start);
-    // pressToContinue(true);
     loadFlashSaveToBuffer(offset);//加载先前的存档
     gotoChipOffset(offset,true,false);//开始游戏
     return offset;
@@ -170,9 +170,26 @@ void loadFlashSaveToBuffer(int GameMBOffset){
     }
 }
 int trySaveGame(){
+
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
     if(last_run.isValid()){
-        saveSramToFlash(last_run.MBOffset);
+        std::string gameInfoStr = "Last Game:\nName: ";
+        gameInfoStr += (const char*)last_run.gameName;
+        gameInfoStr += "\nOffset: " +std::to_string(last_run.MBOffset)+std::string("MB");
+        std::string menuTitle = "Do you want to save last game?\n" + gameInfoStr;
+        
+        Menu menu(menuTitle.c_str());
+        menu.addOption("Yes");
+        menu.addOption("No");
+        int option = menu.getDecision();
+        if(option == 0){
+            saveSramToFlash(last_run.MBOffset);
+            printf("Sram saved\n");
+        }else{
+            printf("Save skipped\n");
+        }
+        // pressToContinue(true);
+        pressToContinue(true);
         return last_run.MBOffset;
     }
     return -1;

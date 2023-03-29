@@ -84,7 +84,7 @@ int unlockBlock(int block){
 	return 0;
 }
 
-int flashIntelBuffered(int block,int sector,int sector_num){
+int flashIntelBuffered(int block,int sector,int sector_num,bool cal){
 
 	u32 writeAddr =  block* BLOCK_SIZE + sector * SECTOR_SIZE;
 	int bufAddr = 0;
@@ -115,6 +115,22 @@ int flashIntelBuffered(int block,int sector,int sector_num){
         writeAddr+=0x400;
         
     }
+	if(cal){
+		u32 readAddr =  block* BLOCK_SIZE + sector * SECTOR_SIZE;
+		for(int i=0;i<sector_num;i++){
+			for(int j=0;j<1024;j+=2){
+				u16 data = (globle_buffer[sector*1024 + j] | (globle_buffer[sector*1024 + j+1] <<8));
+				if(readFlash(readAddr) != data ){
+					printf("data error at sector%d,%d",i,j);
+					printf("want:%x get:%x\n",data,readFlash(readAddr));
+					pressToContinue(true);
+				}
+				readAddr+=2;
+			}
+		}
+		printf("flash cal complete\n");
+		pressToContinue(true);
+	}
     
 	
 	return 0;
