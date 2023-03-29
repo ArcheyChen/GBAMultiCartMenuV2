@@ -30,16 +30,15 @@ IWRAM_CODE int main(void) {
 
 
 	////////////////////
-	int offset;
 	if(pressedKeyOnBoot(KEY_L | KEY_R)){
 		int lastOffset = trySaveGame();
-		offset = askMBOffset(lastOffset);
+		askMBOffset(lastOffset);
 	}
 
 	if(!autoStartGame()){//试图自动开始游戏
 		printf("Last Game Not Found\n");
 		pressToContinue(true);
-		offset = askMBOffset(-1);
+		askMBOffset(-1);
 	}
 
 	// printf("Manully boot Offset set = %d MB",offset);

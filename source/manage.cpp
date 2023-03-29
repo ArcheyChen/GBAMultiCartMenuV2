@@ -25,6 +25,8 @@ struct LastTimeRun{
         for(int i=0;i<MAGIC_LEN;i++){
             this->MAGIC_CODE1[i] = that.MAGIC_CODE1[i];
             this->MAGIC_CODE2[i] = that.MAGIC_CODE2[i];
+        }
+        for(int i=0;i<GAME_NAME_LEN+1;i++){
             this->gameName[i] = that.gameName[i];
         }
     }
@@ -49,6 +51,9 @@ int askMBOffset(int lastOffset){
         gameMenu.addOption(std::to_string(gameEntries[i].MB_offset) +std::string("MB  ") +std::string(gameEntries[i].name));
     }
     int option = gameMenu.getDecision();
+    while(option == -1){
+        option = gameMenu.getDecision();
+    }
     int offset = gameEntries[option].MB_offset;    
 
     LastTimeRun newLastRun(offset);
@@ -60,7 +65,6 @@ int askMBOffset(int lastOffset){
     unlockBlock(META_BLOCK_IDX);
     eraseBlock(META_BLOCK_IDX);
     flashIntelBuffered(META_BLOCK_IDX,0,1);//烧写Meta
-    LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
     loadFlashSaveToBuffer(offset);//加载先前的存档
     gotoChipOffset(offset,true,false);//开始游戏
     return offset;
