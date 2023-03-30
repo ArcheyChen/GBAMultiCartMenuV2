@@ -10,18 +10,20 @@
 
 const int MAGIC_LEN = 32;
 const char MAGIC_CODE_STD[MAGIC_LEN] = "THIS IS A TEST VER";
-const int META_BLOCK_IDX = 8 * 1024 / 256;//存放在第7MB的地方
-void loadFlashSaveToBuffer(int GameMBOffset);
+const int META_BLOCK_IDX = 8 * 1024 / 256;//存放在第8MB的地方
+const int SRAM_NOT_SAVE_BACKUP_BLOCK_IDX = META_BLOCK_IDX + 1;
+//如果一开始没选save sram,可能导致sram炸了，因此这个时候要把sram保存到这个位置
+void loadFlashSaveToBuffer(int GameMBOffset,bool loadFromAutoSave);
 void saveSramSaveToBuffer();
 struct LastTimeRun{
     char MAGIC_CODE1[MAGIC_LEN];
     char gameName[GAME_NAME_LEN + 1];
     int MBOffset;
-    bool auto_start;
+    bool load_from_auto_save;
     char MAGIC_CODE2[MAGIC_LEN];
     LastTimeRun(const volatile LastTimeRun& that){
         this->MBOffset = that.MBOffset;
-        this->auto_start = that.auto_start;
+        this->load_from_auto_save = that.load_from_auto_save;
         for(int i=0;i<MAGIC_LEN;i++){
             this->MAGIC_CODE1[i] = that.MAGIC_CODE1[i];
             this->MAGIC_CODE2[i] = that.MAGIC_CODE2[i];
@@ -37,11 +39,20 @@ struct LastTimeRun{
     }
     LastTimeRun (int _MBOffset){
         this->MBOffset = _MBOffset;
-        this->auto_start = true;
+        this->load_from_auto_save = false;
         strncpy(MAGIC_CODE1,MAGIC_CODE_STD,MAGIC_LEN);
         strncpy(MAGIC_CODE2,MAGIC_CODE_STD,MAGIC_LEN);
     }
 };
+
+void saveMetaToFlash(LastTimeRun newLastRun){
+
+    LastTimeRun* lastRunBuffer = (LastTimeRun*)globle_buffer;
+    *lastRunBuffer = newLastRun;//新的Meta
+    unlockBlock(META_BLOCK_IDX);
+    eraseBlock(META_BLOCK_IDX);
+    flashIntelBuffered(META_BLOCK_IDX,0,1);//烧写Meta
+}
 
 int askMBOffset(int lastOffset){
 
@@ -56,64 +67,13 @@ int askMBOffset(int lastOffset){
     }
     int offset = gameEntries[option].MB_offset;    
 
-    LastTimeRun newLastRun(offset);
+    LastTimeRun newLastRun(offset);//建立新的meta
     strncpy(newLastRun.gameName, gameEntries[option].name,GAME_NAME_LEN);
     newLastRun.gameName[GAME_NAME_LEN]='\0';
-    LastTimeRun* lastRunBuffer = (LastTimeRun*)globle_buffer;
-    *lastRunBuffer = newLastRun;//新的Meta
 
-    unlockBlock(META_BLOCK_IDX);
-    eraseBlock(META_BLOCK_IDX);
-    flashIntelBuffered(META_BLOCK_IDX,0,1);//烧写Meta
-    loadFlashSaveToBuffer(offset);//加载先前的存档
-    gotoChipOffset(offset,true,false);//开始游戏
-    return offset;
-}
+    saveMetaToFlash(newLastRun);
 
-int askMBOffset_OLD(int lastOffset){
-
-    int offset = 0;
-    while(1){
-        consoleClear();
-       LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
-    printf("last Run:\n M1:%s\nM2:%s\n auto boot:%d\n",last_run.MAGIC_CODE1,last_run.MAGIC_CODE2,last_run.auto_start);
-     if(lastOffset>0){
-            printf("Saved sram at %d MB Game\n",lastOffset);
-        }
-        printf("Offset = %d MB\n",offset);
-        
-		scanKeys();
-        auto keys = keysDown();
-        if(keys & KEY_UP){
-            offset += 8;
-        }else if (keys & KEY_DOWN){
-            offset -= 8;
-        }else if (keys & KEY_LEFT){
-            offset -= 16;
-        }else if (keys & KEY_RIGHT){
-            offset += 16;
-        }
-
-        if(offset<16){
-            offset = 16;
-        }
-        if(offset>256-8){
-            offset = 256-8;
-        }
-        if(keys & KEY_A){
-            break;
-        }
-		VBlankIntrWait();
-    }
-    
-    LastTimeRun newLastRun(offset);
-    *(LastTimeRun*)globle_buffer = newLastRun;//新的Meta
-
-    unlockBlock(META_BLOCK_IDX);
-    eraseBlock(META_BLOCK_IDX);
-    flashIntelBuffered(META_BLOCK_IDX,0,1);//烧写Meta
-
-    loadFlashSaveToBuffer(offset);//加载先前的存档
+    loadFlashSaveToBuffer(offset,false);//加载先前的存档
     gotoChipOffset(offset,true,false);//开始游戏
     return offset;
 }
@@ -121,7 +81,12 @@ int askMBOffset_OLD(int lastOffset){
 bool autoStartGame(){
     gotoChipOffset(0,false,false);
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
-    if(last_run.isValid() && last_run.auto_start){
+    if(last_run.isValid()){
+        if(last_run.load_from_auto_save){//如果上次游戏进过菜单，sram可能会损坏，需要从autosave中load出来
+            last_run.load_from_auto_save = false;
+            saveMetaToFlash(last_run);
+            loadFlashSaveToBuffer(0,true);
+        }
         gotoChipOffset(last_run.MBOffset,true,true);
         return true;//should never return
     }
@@ -138,9 +103,12 @@ bool pressedKeyOnBoot(u16 key){
     }
     return false;
 }
-void saveSramToFlash(int GameMBOffset){
+void saveSramToFlash(int GameMBOffset,bool isAutoSave){
     int gameIdx = GameMBOffset / 8;
     int blockIdx = (8 * 1024/256) + gameIdx;//从8MB的地方开始放，最多支持32个游戏，32*256KB=8MB，刚好用前16MB空间
+    if(isAutoSave){
+        blockIdx = SRAM_NOT_SAVE_BACKUP_BLOCK_IDX;//没选保存的情况下，就烧到这个地方。
+    }
     saveSramSaveToBuffer();
     unlockBlock(blockIdx);
     eraseBlock(blockIdx);
@@ -163,9 +131,12 @@ void saveSramSaveToBuffer(){
 	globle_buffer[3] = sramBackup[1];
 	globle_buffer[4] = sramBackup[2];
 }
-void loadFlashSaveToBuffer(int GameMBOffset){
+void loadFlashSaveToBuffer(int GameMBOffset,bool loadFromAutoSave){
     int gameIdx = GameMBOffset / 8;
     int blockIdx = (8 * 1024/256) + gameIdx;//从8MB的地方开始放，最多支持32个游戏，32*256KB=8MB，刚好用前16MB空间
+    if(loadFromAutoSave){
+        blockIdx = SRAM_NOT_SAVE_BACKUP_BLOCK_IDX;
+    }
     gotoChipOffset(0,false);//回到0 Offset的位置，保证读取到的是正确的东西
     int flashAddr = blockIdx * BLOCK_SIZE;
     vu8* flash = (vu8*)(GAME_ROM + flashAddr);
@@ -187,10 +158,14 @@ int trySaveGame(){
         menu.addOption("No");
         int option = menu.getDecision();
         if(option == 0){
-            saveSramToFlash(last_run.MBOffset);
+            saveSramToFlash(last_run.MBOffset,false);
             printf("Sram saved\n");
         }else{
             printf("Save skipped\n");
+            printf("Working,please wait...\n");
+            saveSramToFlash(last_run.MBOffset,true);
+            last_run.load_from_auto_save = true;
+            saveMetaToFlash(last_run);
         }
         // pressToContinue(true);
         pressToContinue(true);
