@@ -42,6 +42,7 @@ IWRAM_CODE void gotoChipOffset(int MBoffset,bool bootGame,bool isAutoBoot){
 	int timeout = 0x1000;
 	while(timeout && readFlash(0xBD) == data)timeout--;
     if(bootGame){
+        REG_IE = 0;
         // restoreSram();
         if(isAutoBoot){
             restoreSramLite();
