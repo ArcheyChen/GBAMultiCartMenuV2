@@ -20,7 +20,8 @@ include $(DEVKITARM)/gba_rules
 # the makefile is found
 #
 #---------------------------------------------------------------------------------
-TARGET		:= $(notdir $(CURDIR))
+# Add _mb to make it compile as multiboot
+TARGET		:= $(notdir $(CURDIR))_mb
 BUILD		:= build
 SOURCES		:= source
 INCLUDES	:= include

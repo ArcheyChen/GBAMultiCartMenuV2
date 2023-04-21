@@ -11,6 +11,8 @@
 #include "sramtest.h"
 #include "manage.h"
 #include "menu.h"
+volatile static char Dummy_SaveType[]="SRAM_V113";//让存档管理器识别为SRAM存档，虽然可能认为只有256K.....
+	
 //---------------------------------------------------------------------------------
 // Program entry point
 //---------------------------------------------------------------------------------
@@ -18,6 +20,7 @@ IWRAM_CODE int main(void) {
 //---------------------------------------------------------------------------------
 
 
+	char DONT_OPT_MY_SAVE_TYPE_STR = Dummy_SaveType[0];	//让编译器不优化掉n
 	// the vblank interrupt must be enabled for VBlankIntrWait() to work
 	// since the default dispatcher handles the bios flags no vblank handler
 	// is required

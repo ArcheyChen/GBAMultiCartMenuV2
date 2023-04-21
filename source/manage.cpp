@@ -83,6 +83,7 @@ bool autoStartGame(){
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
     if(last_run.isValid()){
         if(last_run.load_from_auto_save){//如果上次游戏进过菜单，sram可能会损坏，需要从autosave中load出来
+            printf("Loading auto save...");//等待时间会比较久，让玩家知道这是正常的
             last_run.load_from_auto_save = false;
             saveMetaToFlash(last_run);
             loadFlashSaveToBuffer(0,true);
