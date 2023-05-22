@@ -20,11 +20,11 @@ IWRAM_CODE vu16 readFlash(u32 addr){
 	return *(vu16*)(addr|GAME_ROM);
 }
 
-volatile void writeFlash(u32 addr, u16 data){
+IWRAM_CODE volatile void writeFlash(u32 addr, u16 data){
 	*(vu16 *)(addr|0x8000000) = data;
 	asm("nop");
 }
-void writeFlashFlip(u32 addr, u16 data){
+IWRAM_CODE void writeFlashFlip(u32 addr, u16 data){
 	if(false){
 		u16 flipped = data & 0xFFFC;
 		flipped |= ( data & 1 ) << 1;
@@ -33,13 +33,13 @@ void writeFlashFlip(u32 addr, u16 data){
 	}else writeFlash(addr, data);
 }
 
-void writeArray(u32 addr, u8 len, u16 data[]){
+IWRAM_CODE void writeArray(u32 addr, u8 len, u16 data[]){
 	for(int i = 0; i<len;i++){
 		writeFlash(addr,data[i]);
 	}
 }
 
-bool waitForFlash(u32 address, bool (*isReady)(u16), int timeout){
+IWRAM_CODE bool waitForFlash(u32 address, bool (*isReady)(u16), int timeout){
 	while(timeout && !isReady(readFlash(address)) ){
 		timeout--;
 	}
@@ -48,7 +48,7 @@ bool waitForFlash(u32 address, bool (*isReady)(u16), int timeout){
 	}
 	return true;
 }
-int eraseBlock(int block){
+IWRAM_CODE int eraseBlock(int block){
 	u32 addr = block*BLOCK_SIZE;
 	u16 cmd[] = {0x50,0xFF,0x20,0xD0};
 	writeArray(addr, 4, cmd);
@@ -70,7 +70,7 @@ int eraseBlock(int block){
 	writeFlash(addr, 0xFF);
 	return -1;
 }
-int unlockBlock(int block){
+IWRAM_CODE int unlockBlock(int block){
 	u32 addr = block*BLOCK_SIZE;
 	u16 cmd[] = {0x50,0xFF,0x60,0xD0};
 	writeArray(addr, 4, cmd);
@@ -84,7 +84,7 @@ int unlockBlock(int block){
 	return 0;
 }
 
-int flashIntelBuffered(int block,int sector,int sector_num,bool cal){
+IWRAM_CODE int flashIntelBuffered(int block,int sector,int sector_num,bool cal){
 
 	u32 writeAddr =  block* BLOCK_SIZE + sector * SECTOR_SIZE;
 	int bufAddr = 0;

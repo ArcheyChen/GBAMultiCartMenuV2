@@ -79,7 +79,6 @@ int askMBOffset(int lastOffset){
 }
 
 bool autoStartGame(){
-    gotoChipOffset(0,false,false);
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
     if(last_run.isValid()){
         if(last_run.load_from_auto_save){//如果上次游戏进过菜单，sram可能会损坏，需要从autosave中load出来
@@ -87,6 +86,7 @@ bool autoStartGame(){
             last_run.load_from_auto_save = false;
             saveMetaToFlash(last_run);
             loadFlashSaveToBuffer(0,true);
+            gotoChipOffset(last_run.MBOffset,true,false);//这次我们不用sram save lite中的数据恢复
         }
         gotoChipOffset(last_run.MBOffset,true,true);
         return true;//should never return

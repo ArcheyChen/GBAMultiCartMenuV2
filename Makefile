@@ -21,7 +21,7 @@ include $(DEVKITARM)/gba_rules
 #
 #---------------------------------------------------------------------------------
 # Add _mb to make it compile as multiboot
-TARGET		:= $(notdir $(CURDIR))_mb
+TARGET		:= $(notdir $(CURDIR))
 BUILD		:= build
 SOURCES		:= source
 INCLUDES	:= include
