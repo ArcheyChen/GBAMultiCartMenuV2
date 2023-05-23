@@ -2,6 +2,7 @@
 #include "gba_input.h"
 #include "gba_systemcalls.h"
 #include "misc.h"
+#include "font.h"
 
 
 Menu::Menu(const char* title){
@@ -75,15 +76,15 @@ return selected;
 
 
 void Menu::printSelection(){
-	consoleClear();
-	printf("%s\n\n", title);
+	clearConsole();
+	printf_zh("%s\n\n", title);
 	//offset:int selected:int 
 	for(int i=0;i<height-2;i++){
 		if((int)selected == (int)(i+offset)){
-			printf(">");
+			printf_zh(">");
 		}
 		if((int)(i+offset)<(int)options.size()){
-			printf(" %s\n", options.at(i+offset).c_str());
+			printf_zh(" %s\n", options.at(i+offset).c_str());
 		}
 	}
 }
@@ -147,7 +148,7 @@ int Menu::getNumerical(){
 			hasChosen = 1;
 		}
 		if(key & KEY_B){
-			consoleClear();
+			clearConsole();
 			return -1;
 		}
 
@@ -176,15 +177,15 @@ int Menu::getNumerical(){
 		printNumericalSelection();
 
 	}while(hasChosen == false);
-	consoleClear();
+	clearConsole();
 	return selected*numerical_increment;
 }
 
 
 
 void Menu::printNumericalSelection(){
-	consoleClear();
-	printf("%s %02X\n\nUp/Down - Select\nA - Confirm\nB - Back", title, selected*numerical_increment);	
+	clearConsole();
+	printf_zh("%s %02X\n\nUp/Down - Select\nA - Confirm\nB - Back", title, selected*numerical_increment);	
 }
 
 

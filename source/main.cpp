@@ -11,6 +11,7 @@
 #include "sramtest.h"
 #include "manage.h"
 #include "menu.h"
+#include "font.h"
 volatile static char Dummy_SaveType[]="SRAM_V113";//让存档管理器识别为SRAM存档，虽然可能认为只有256K.....
 	
 //---------------------------------------------------------------------------------
@@ -26,7 +27,12 @@ IWRAM_CODE int main(void) {
 	// is required
 	irqInit();
 	irqEnable(IRQ_VBLANK);
-	consoleDemoInit();
+	SetMode (MODE_3 | BG2_ENABLE );
+	fbInit();
+	REG_IME = 1;
+	// irqInit();
+	// irqEnable(IRQ_VBLANK);
+	// consoleDemoInit();
 	backupSramLite();
 	//////////////////////
 
@@ -39,12 +45,12 @@ IWRAM_CODE int main(void) {
 	}
 
 	if(!autoStartGame()){//试图自动开始游戏
-		printf("Last Game Not Found\n");
+		printf_zh("Last Game Not Found\n");
 		pressToContinue(true);
 		askMBOffset(-1);
 	}
 
-	// printf("Manully boot Offset set = %d MB",offset);
+	// printf_zh("Manully boot Offset set = %d MB",offset);
 
 	while (1) {
 		VBlankIntrWait();

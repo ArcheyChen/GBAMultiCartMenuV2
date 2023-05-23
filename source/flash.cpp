@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "flash.h"
 #include "misc.h"
+#include "font.h"
 
 #define WAIT_STATUS_READY [](u16 a){return (a&0x80)>0;}
 #define WAIT_NON_FFFF [](u16 a){return a!=0xFFFF;}
@@ -61,12 +62,12 @@ IWRAM_CODE int eraseBlock(int block){
 	}
 
 	if(readFlash(addr)&0x20){
-			printf("Sector %d erase failed\n", block);
+			printf_zh("Sector %d erase failed\n", block);
 			writeFlash(addr, 0xFF);
 			return -1;
 	}
 	
-	printf("Intel erase timeout on block %d\n",block);
+	printf_zh("Intel erase timeout on block %d\n",block);
 	writeFlash(addr, 0xFF);
 	return -1;
 }
@@ -103,12 +104,12 @@ IWRAM_CODE int flashIntelBuffered(int block,int sector,int sector_num,bool cal){
         
         waitForFlash(writeAddr, WAIT_NON_FFFF, 0x1000);
         if(!waitForFlash(writeAddr, WAIT_STATUS_READY, 0x5000)){
-            printf("Writing timed out at 0x%06lX\n", writeAddr);
+            printf_zh("Writing timed out at 0x%06lX\n", writeAddr);
             return -1;
         }
             
         if(readFlash(writeAddr)&3){
-            printf("Writing failed at 0x%06lX\n", writeAddr);
+            printf_zh("Writing failed at 0x%06lX\n", writeAddr);
         }
         
         writeFlash(writeAddr, 0xFF);//进入读模式
@@ -121,14 +122,14 @@ IWRAM_CODE int flashIntelBuffered(int block,int sector,int sector_num,bool cal){
 			for(int j=0;j<1024;j+=2){
 				u16 data = (globle_buffer[sector*1024 + j] | (globle_buffer[sector*1024 + j+1] <<8));
 				if(readFlash(readAddr) != data ){
-					printf("data error at sector%d,%d",i,j);
-					printf("want:%x get:%x\n",data,readFlash(readAddr));
+					printf_zh("data error at sector%d,%d",i,j);
+					printf_zh("want:%x get:%x\n",data,readFlash(readAddr));
 					pressToContinue(true);
 				}
 				readAddr+=2;
 			}
 		}
-		printf("flash cal complete\n");
+		printf_zh("flash cal complete\n");
 		pressToContinue(true);
 	}
     

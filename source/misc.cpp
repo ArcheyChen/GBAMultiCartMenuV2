@@ -1,6 +1,7 @@
 #include <gba_base.h>
 #include "misc.h"
 #include "flash.h"
+#include "font.h"
 
 EWRAM_BSS u8 globle_buffer[BUFFER_SIZE];//64KB
 EWRAM_BSS u8 sramBackup[3];
@@ -66,7 +67,7 @@ IWRAM_CODE char isGame(){
 	return checksum == 0x4B1B;
 }
 IWRAM_CODE void findGames(){
-    printf("Finding Games,Please Wait...\n");
+    printf_zh("Finding Games,Please Wait...\n");
     gameCnt = 0;
     unsigned int i;
     u16 MB_Offset;
@@ -86,13 +87,10 @@ IWRAM_CODE void findGames(){
     return;
 }
 
-void consoleClear(){
-    printf("\x1b[2J");
-}
 
 void pressToContinue(bool show){
     if(show){   
-        printf("press to continue\n");
+        printf_zh("press to continue\n");
     }
     while(1){
         scanKeys();

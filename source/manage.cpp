@@ -7,6 +7,7 @@
 #include "flash.h"
 #include <string.h>
 #include "menu.h"
+#include "font.h"
 
 const int MAGIC_LEN = 32;
 const char MAGIC_CODE_STD[MAGIC_LEN] = "THIS IS A TEST VER";
@@ -82,7 +83,7 @@ bool autoStartGame(){
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
     if(last_run.isValid()){
         if(last_run.load_from_auto_save){//如果上次游戏进过菜单，sram可能会损坏，需要从autosave中load出来
-            printf("Loading auto save...");//等待时间会比较久，让玩家知道这是正常的
+            printf_zh("Loading auto save...");//等待时间会比较久，让玩家知道这是正常的
             last_run.load_from_auto_save = false;
             saveMetaToFlash(last_run);
             loadFlashSaveToBuffer(0,true);
@@ -118,8 +119,8 @@ void saveSramToFlash(int GameMBOffset,bool isAutoSave){
     vu8* flash = (vu8*)(GAME_ROM + flashAddr);
     for(int i=0;i< 64 * 1024;i++){
         if(flash[i] != globle_buffer[i]){
-            printf("sram save error at %d\n",i);
-            printf("flash=%x buffer=%x\n",flash[i],globle_buffer[i]);
+            printf_zh("sram save error at %d\n",i);
+            printf_zh("flash=%x buffer=%x\n",flash[i],globle_buffer[i]);
         }
     }
 }
@@ -138,7 +139,6 @@ void loadFlashSaveToBuffer(int GameMBOffset,bool loadFromAutoSave){
     if(loadFromAutoSave){
         blockIdx = SRAM_NOT_SAVE_BACKUP_BLOCK_IDX;
     }
-    gotoChipOffset(0,false);//回到0 Offset的位置，保证读取到的是正确的东西
     int flashAddr = blockIdx * BLOCK_SIZE;
     vu8* flash = (vu8*)(GAME_ROM + flashAddr);
     for(int i=0;i<64 * 1024;i++){
@@ -160,10 +160,10 @@ int trySaveGame(){
         int option = menu.getDecision();
         if(option == 0){
             saveSramToFlash(last_run.MBOffset,false);
-            printf("Sram saved\n");
+            printf_zh("Sram saved\n");
         }else{
-            printf("Save skipped\n");
-            printf("Working,please wait...\n");
+            printf_zh("Save skipped\n");
+            printf_zh("Working,please wait...\n");
             saveSramToFlash(last_run.MBOffset,true);
             last_run.load_from_auto_save = true;
             saveMetaToFlash(last_run);

@@ -7,7 +7,6 @@
 extern u8 globle_buffer[BUFFER_SIZE];//64KB
 extern u8 sramBackup[3];
 extern int gameCnt;
-void consoleClear();
 void pressToContinue(bool show = false);
 void gotoChipOffset(int MBoffset,bool bootGame,bool isAutoBoot=false);
 void backupSramLite();
