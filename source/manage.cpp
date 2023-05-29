@@ -87,6 +87,7 @@ bool autoStartGame(){
             last_run.load_from_auto_save = false;
             saveMetaToFlash(last_run);
             loadFlashSaveToBuffer(0,true);
+            gotoChipOffset(last_run.MBOffset,true,false);//这次我们不用sram save lite中的数据恢复
         }
         gotoChipOffset(last_run.MBOffset,true,true);
         return true;//should never return
