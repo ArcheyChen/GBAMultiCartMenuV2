@@ -16,3 +16,6 @@ void halDrawPixel(int x, int y, u16 color);
 
 const char *halGetFontDataPtr();
 void halClearPixel();
+void syncToScreen();
+void syncEnable();
+void syncDisable();

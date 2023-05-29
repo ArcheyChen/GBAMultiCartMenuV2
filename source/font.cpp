@@ -28,7 +28,7 @@ void fbInit() {
   fbCurrentFont = pFont;
 }
 
-static int fbDrawUnicodeRune(u32 rune,u16 color) {
+static int fbDrawUtf16(u32 rune,u16 color) {
   if (!fbCurrentFont) {
     return 0;
   }
@@ -77,39 +77,26 @@ static int fbDrawUnicodeRune(u32 rune,u16 color) {
   return width;
 }
 
-void fbDrawUtf8String(const char *utf8Str, u16 color) {
-  u8 *p = (u8 *)utf8Str;
-  u16 rune = 0;
-  while (*p) {
-    rune = 0;
-    u8 byte1 = *p;
-    p++;
-    if ((byte1 & 0x80) == 0) {
-      rune = byte1;
-    } else {
-      u8 byte2 = *p;
-      p++;
-      if (byte2 == 0) {
-        break;
-      }
-      if ((byte1 & 0xE0) == 0xC0) {
-        rune = ((byte1 & 0x1F) << 6) | (byte2 & 0x3F);
-      } else {
-        u8 byte3 = *p;
-        p++;
-        if (byte3 == 0) {
-          break;
-        }
-        if ((byte1 & 0xf0) == 0xE0) {
-          rune =
-              ((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F);
-        } else {
-          break;
-        }
-      }
-    }
-    fbDrawUnicodeRune(rune,color);
-  }
+void utf8to16AndDraw(const char * text,u16 color){
+  int utf8_len = strlen(text);
+	for(int i = 0; i < utf8_len;i){
+		u16 char_utf16;
+		if(!(text[i] & 0x80)){
+			char_utf16 = text[i++];
+		}else if((text[i] & 0xE0) == 0xC0){
+			char_utf16  = (text[i++] & 0x1F) << 6;
+			char_utf16 |=  text[i++] & 0x3F;
+		}else if((text[i] & 0xF0) == 0xE0){
+			char_utf16  = (text[i++] & 0x0F) << 12;
+			char_utf16 |= (text[i++] & 0x3F) << 6;
+			char_utf16 |=  text[i++] & 0x3F;
+		}else{
+			i++; // out of range or something (This only does up to U+FFFF since it goes to a U16 anyways)
+		}
+    fbDrawUtf16(char_utf16,color);
+	}
+  
+  syncToScreen();
 }
 char printf_str_buffer[1024];//一个字最多3B，1K应该不会爆了吧
 void printf_zh(const char *format, ...)
@@ -118,7 +105,7 @@ void printf_zh(const char *format, ...)
     va_start(va, format);
     vsprintf(printf_str_buffer, format, va);
     va_end(va);
-    fbDrawUtf8String(printf_str_buffer,RGB(31,31,31));
+    utf8to16AndDraw(printf_str_buffer,RGB(31,31,31));
 }
 void printf_zh_color(u16 color,const char *format, ...)
 {
@@ -126,7 +113,7 @@ void printf_zh_color(u16 color,const char *format, ...)
     va_start(va, format);
     vsprintf(printf_str_buffer, format, va);
     va_end(va);
-    fbDrawUtf8String(printf_str_buffer,color);
+    utf8to16AndDraw(printf_str_buffer,color);
 }
 void clearConsole(){
   halClearPixel();

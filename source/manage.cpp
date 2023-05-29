@@ -58,7 +58,7 @@ void saveMetaToFlash(LastTimeRun newLastRun){
 int askMBOffset(int lastOffset){
 
     findGames();
-    Menu gameMenu("========Games=======");
+    Menu gameMenu("=============游戏列表=============");
     for(int i=0;i<gameCnt;i++){
         gameMenu.addOption(std::to_string(gameEntries[i].MB_offset) +std::string("MB  ") +std::string(gameEntries[i].name));
     }
@@ -83,7 +83,7 @@ bool autoStartGame(){
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
     if(last_run.isValid()){
         if(last_run.load_from_auto_save){//如果上次游戏进过菜单，sram可能会损坏，需要从autosave中load出来
-            printf_zh("Loading auto save...");//等待时间会比较久，让玩家知道这是正常的
+            printf_zh("加载自动保存的存档中...");//等待时间会比较久，让玩家知道这是正常的
             last_run.load_from_auto_save = false;
             saveMetaToFlash(last_run);
             loadFlashSaveToBuffer(0,true);
@@ -149,10 +149,13 @@ int trySaveGame(){
 
     LastTimeRun last_run = *(volatile LastTimeRun*)(GAME_ROM + META_BLOCK_IDX * BLOCK_SIZE); 
     if(last_run.isValid()){
-        std::string gameInfoStr = "Last Game:\nName: ";
+
+        printf_zh("欢迎使用Ausar合卡管理菜单V0.9\n");
+        printf_zh("仅供学习交流使用，禁止商业用途\n\n");
+        std::string gameInfoStr = "上次运行的游戏:\n游戏名: ";
         gameInfoStr += (const char*)last_run.gameName;
-        gameInfoStr += "\nOffset: " +std::to_string(last_run.MBOffset)+std::string("MB");
-        std::string menuTitle = "Do you want to save last game?\n" + gameInfoStr;
+        gameInfoStr += "\n偏移: " +std::to_string(last_run.MBOffset)+std::string("MB");
+        std::string menuTitle = "是否保存上次游戏存档到Flash?\n" + gameInfoStr;
         
         Menu menu(menuTitle.c_str());
         menu.addOption("Yes");
@@ -160,10 +163,10 @@ int trySaveGame(){
         int option = menu.getDecision();
         if(option == 0){
             saveSramToFlash(last_run.MBOffset,false);
-            printf_zh("Sram saved\n");
+            printf_zh("Sram 已保存\n");
         }else{
-            printf_zh("Save skipped\n");
-            printf_zh("Working,please wait...\n");
+            printf_zh("跳过保存\n");
+            printf_zh("处理中,请稍后...\n");
             saveSramToFlash(last_run.MBOffset,true);
             last_run.load_from_auto_save = true;
             saveMetaToFlash(last_run);

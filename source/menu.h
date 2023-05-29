@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdio>
 
-#define CONSOLE_HEIGHT 19
+#define CONSOLE_HEIGHT 11
 
 class Menu{
 	const char* title;

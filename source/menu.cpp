@@ -76,6 +76,7 @@ return selected;
 
 
 void Menu::printSelection(){
+	syncDisable();
 	clearConsole();
 	printf_zh("%s\n\n", title);
 	//offset:int selected:int 
@@ -87,6 +88,10 @@ void Menu::printSelection(){
 			printf_zh(" %s\n", options.at(i+offset).c_str());
 		}
 	}
+
+	syncEnable();
+	VBlankIntrWait();
+	syncToScreen();
 }
 
 

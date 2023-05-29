@@ -30,9 +30,6 @@ IWRAM_CODE int main(void) {
 	SetMode (MODE_3 | BG2_ENABLE );
 	fbInit();
 	REG_IME = 1;
-	// irqInit();
-	// irqEnable(IRQ_VBLANK);
-	// consoleDemoInit();
 	backupSramLite();
 	//////////////////////
 
@@ -45,7 +42,7 @@ IWRAM_CODE int main(void) {
 	}
 
 	if(!autoStartGame()){//试图自动开始游戏
-		printf_zh("Last Game Not Found\n");
+		printf_zh("未找到上次运行的游戏\n");
 		pressToContinue(true);
 		askMBOffset(-1);
 	}

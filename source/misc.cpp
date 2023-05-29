@@ -66,19 +66,43 @@ IWRAM_CODE char isGame(){
 	}
 	return checksum == 0x4B1B;
 }
+
+#define RD_MAGIC_WORD_STD_LEN 12
+
+EWRAM_DATA char RD_MAGIC_WORD_STD[RD_MAGIC_WORD_STD_LEN] = "AUSAR^RD";
+
+IWRAM_CODE bool isExpandMode(){
+    volatile RedirectStruct *rd = (volatile RedirectStruct*)0x80000A0;
+    for(int i=0;i<RD_MAGIC_WORD_STD_LEN;i++){
+        if(rd->MAGIC_WORD[i]!=RD_MAGIC_WORD_STD[i]){
+            return false;
+        }
+    }
+    return true;
+}
 IWRAM_CODE void findGames(){
-    printf_zh("Finding Games,Please Wait...\n");
+    printf_zh("正在查找卡带中游戏，请稍后...\n");
     gameCnt = 0;
     unsigned int i;
     u16 MB_Offset;
     for(MB_Offset = 16 ;MB_Offset < 256; MB_Offset += 8){\
         gotoChipOffset(MB_Offset,0);
         if(isGame()){
-            vu8 *romName = (unsigned char*)0x80000A0;
-            for(i=0;i<GAME_NAME_LEN;i++){
-                gameEntries[gameCnt].name[i] = romName[i];
+            if(isExpandMode()){
+                volatile RedirectStruct *rd = (volatile RedirectStruct*)0x80000A0;
+                vu8 *romName = (volatile unsigned char*)(0x8000000 + rd->offset);
+                for(i=0;i<GAME_NAME_LEN_EXPAND;i++){
+                    gameEntries[gameCnt].name[i] = romName[i];
+                }
+                gameEntries[gameCnt].name[GAME_NAME_LEN_EXPAND] = 0;//字符串结尾
+                // gameEntries[gameCnt].name[0]='A';//Test
+            }else{
+                vu8 *romName = (unsigned char*)0x80000A0;
+                for(i=0;i<GAME_NAME_LEN;i++){
+                    gameEntries[gameCnt].name[i] = romName[i];
+                }
+                gameEntries[gameCnt].name[GAME_NAME_LEN] = 0;//字符串结尾
             }
-            gameEntries[gameCnt].name[GAME_NAME_LEN] = 0;//字符串结尾
             gameEntries[gameCnt].MB_offset = MB_Offset;
             gameCnt++;
         }
@@ -90,7 +114,7 @@ IWRAM_CODE void findGames(){
 
 void pressToContinue(bool show){
     if(show){   
-        printf_zh("press to continue\n");
+        printf_zh("按任意键继续\n");
     }
     while(1){
         scanKeys();

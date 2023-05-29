@@ -13,13 +13,19 @@ void backupSramLite();
 void findGames();
 
 #define GAME_NAME_LEN 18
+#define GAME_NAME_LEN_EXPAND 14*3
 /*
   0A0h    12    Game Title       (uppercase ascii, max 12 characters)
   0ACh    4     Game Code        (uppercase ascii, 4 characters)
   0B0h    2     Maker Code       (uppercase ascii, 2 characters)
 */
+
+struct RedirectStruct{
+    char MAGIC_WORD[12];
+    int offset;
+};
 struct GameEntry{
-    char name[GAME_NAME_LEN + 1];
+    char name[GAME_NAME_LEN_EXPAND + 1];
     int MB_offset;
 };
 

@@ -118,6 +118,7 @@ $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 	@rm $(TARGET).elf
+	@gbafix $(TARGET).gba -tausar_menu
 
 #---------------------------------------------------------------------------------
 clean:
