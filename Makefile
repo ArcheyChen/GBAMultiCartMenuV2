@@ -21,7 +21,7 @@ include $(DEVKITARM)/gba_rules
 #
 #---------------------------------------------------------------------------------
 # Add _mb to make it compile as multiboot
-TARGET		:= $(notdir $(CURDIR))_mb
+TARGET		:= gba_manager_mb
 BUILD		:= build
 SOURCES		:= source
 INCLUDES	:= include
@@ -118,6 +118,7 @@ $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 	@rm $(TARGET).elf
+	@gbafix $(TARGET).gba -tausar_menu
 
 #---------------------------------------------------------------------------------
 clean:
